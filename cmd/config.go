@@ -14,7 +14,17 @@ type MqttConfig struct {
 	Debug             bool   `yaml:"debug"`               // autopaho and paho debug output requested
 }
 
+type UserConfig struct {
+	Uid                    string `yaml:"uid"`
+	Hid                    byte   `yaml:"hid"`
+	EncryptPrivateKey      string `yaml:"encrypt_private_key"`
+	SignPrivateKey         string `yaml:"sign_private_key"`
+	EncryptMasterPublicKey string `yaml:"encrypt_master_public_key"`
+	SignMasterPublicKey    string `yaml:"sign_master_public_key"`
+}
+
 // Config holds the configuration
 type Config struct {
 	Mqtt MqttConfig `yaml:"mqtt"`
+	User UserConfig `yaml:"user"`
 }
