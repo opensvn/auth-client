@@ -29,7 +29,7 @@ type Client struct {
 //setCallback
 
 func (c *Client) Init() error {
-	buf, err := ioutil.ReadFile("config.yml")
+	buf, err := ioutil.ReadFile("config/config.yml")
 	if err != nil {
 		log.Printf("%s\n", err)
 		return err
