@@ -4,70 +4,48 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"time"
 
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/opensvn/auth-client/config"
-	"gopkg.in/yaml.v3"
 )
 
 type Client struct {
 	c           *paho.Client
 	ServerUrl   *url.URL
-	Config      *config.Config
 	AuthHandler *Sm9Auth
 	User        *User
 	Cm          *autopaho.ConnectionManager
 	handler     *handler
 	Cancel      context.CancelFunc
-}
 
-//setCallback
-
-func (c *Client) Init() error {
-	buf, err := ioutil.ReadFile("config/config.yml")
-	if err != nil {
-		log.Printf("%s\n", err)
-		return err
-	}
-
-	c.Config = &config.Config{}
-	err = yaml.Unmarshal(buf, c.Config)
-	if err != nil {
-		log.Printf("%s\n", err)
-		return err
-	}
-
-	c.ServerUrl, err = url.Parse(c.Config.ServerURL)
-	if err != nil {
-		log.Printf("%s\n", err)
-		return err
-	}
-
-	c.AuthHandler = NewSm9Auth()
-	c.User = NewUser(Kgc, []byte(c.Config.Username), byte(0x01))
-	CurrentUser = c.User
-
-	return nil
+	ClientID          string
+	ClientName        string
+	Topic             string
+	Qos               byte
+	Keepalive         uint16
+	ConnectRetryDelay uint16
+	WriteToStdOut     bool
+	WriteToDisk       bool
+	OutputFileName    string
+	Debug             bool
 }
 
 func (c *Client) Connect() error {
 	// Create a handler that will deal with incoming messages
-	c.handler = NewHandler(c.Config.WriteToDisk, c.Config.OutputFileName, c.Config.WriteToStdOut)
+	c.handler = NewHandler(c.WriteToDisk, c.OutputFileName, c.WriteToStdOut)
 
 	cliCfg := autopaho.ClientConfig{
 		BrokerUrls:        []*url.URL{c.ServerUrl},
-		KeepAlive:         c.Config.Keepalive,
-		ConnectRetryDelay: time.Duration(c.Config.ConnectRetryDelay) * time.Millisecond,
+		KeepAlive:         c.Keepalive,
+		ConnectRetryDelay: time.Duration(c.ConnectRetryDelay) * time.Millisecond,
 		OnConnectionUp: func(cm *autopaho.ConnectionManager, connAck *paho.Connack) {
 			fmt.Println("mqtt connection up")
 			if _, err := cm.Subscribe(context.Background(), &paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{
-					c.Config.Topic: {QoS: c.Config.Qos},
+					c.Topic: {QoS: c.Qos},
 				},
 			}); err != nil {
 				fmt.Printf("failed to subscribe (%s). This is likely to mean no messages will be received.", err)
@@ -77,7 +55,7 @@ func (c *Client) Connect() error {
 		},
 		OnConnectError: func(err error) { fmt.Printf("error whilst attempting connection: %s\n", err) },
 		ClientConfig: paho.ClientConfig{
-			ClientID: c.Config.ClientID,
+			ClientID: c.ClientID,
 			Router: paho.NewSingleHandlerRouter(func(m *paho.Publish) {
 				c.handler.handle(m)
 			}),
@@ -100,23 +78,15 @@ func (c *Client) Connect() error {
 			User: []paho.UserProperty{
 				{
 					Key:   "uid",
-					Value: string(CurrentUser.Uid),
+					Value: string(c.User.Uid),
 				},
 				{
 					Key:   "hid",
-					Value: hex.EncodeToString([]byte{CurrentUser.Hid}),
-				},
-				{
-					Key:   "signMasterKey",
-					Value: CurrentUser.GetSignMasterPublicKeyASN1(),
-				},
-				{
-					Key:   "encryptMasterKey",
-					Value: CurrentUser.GetEncryptMasterPublicKeyASN1(),
+					Value: hex.EncodeToString([]byte{c.User.Hid}),
 				},
 				{
 					Key:   "deviceName",
-					Value: c.Config.ClientName,
+					Value: c.ClientName,
 				},
 			},
 		}
@@ -124,7 +94,7 @@ func (c *Client) Connect() error {
 		return connect
 	})
 
-	if c.Config.Debug {
+	if c.Debug {
 		cliCfg.Debug = logger{prefix: "autoPaho"}
 		cliCfg.PahoDebug = logger{prefix: "paho"}
 	}

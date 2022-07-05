@@ -11,10 +11,11 @@ import (
 type Sm9Auth struct {
 	Random1 string
 	Server  *User
+	client *Client
 }
 
-func NewSm9Auth() *Sm9Auth {
-	return &Sm9Auth{}
+func NewSm9Auth(c *Client) *Sm9Auth {
+	return &Sm9Auth{client: c}
 }
 
 func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
@@ -25,22 +26,13 @@ func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
 		return nil
 	}
 	s.Server.Hid = buf[0]
-	err = s.Server.SetSignMasterPublicKeyASN1(a.Properties.User.Get("signMasterKey"))
-	if err != nil {
-		return nil
-	}
-
-	err = s.Server.SetEncryptMasterPublicKeyASN1(a.Properties.User.Get("encryptMasterKey"))
-	if err != nil {
-		return nil
-	}
 
 	buf, err = hex.DecodeString(string(a.Properties.AuthData))
 	if err != nil {
 		return nil
 	}
 
-	decrypted, err := sm9.DecryptASN1(CurrentUser.encryptPrivateKey, CurrentUser.Uid, buf)
+	decrypted, err := sm9.DecryptASN1(s.client.User.encryptPrivateKey, s.client.User.Uid, buf)
 	if err != nil {
 		return nil
 	}
@@ -51,7 +43,7 @@ func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
 	}
 
 	random2 := decrypted[len(decrypted)/2:]
-	buf, err = sm9.EncryptASN1(rand.Reader, s.Server.encryptPublicKey, s.Server.Uid, s.Server.Hid, random2)
+	buf, err = sm9.EncryptASN1(rand.Reader, s.client.User.GetEncryptMasterPublicKey(), s.Server.Uid, s.Server.Hid, random2)
 	if err != nil {
 		return nil
 	}

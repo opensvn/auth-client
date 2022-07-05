@@ -2,20 +2,52 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/opensvn/auth-client"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	c := &client.Client{}
-	err := c.Init()
+	buf, err := ioutil.ReadFile("config.yml")
 	if err != nil {
+		panic(err)
+	}
+
+	conf := &Config{}
+	err = yaml.Unmarshal(buf, conf)
+	if err != nil {
+		panic(err)
+	}
+
+	user := InitUser(conf)
+
+	serverUrl, err := url.Parse(conf.Mqtt.ServerAddr)
+	if err != nil {
+		log.Printf("%s\n", err)
 		return
 	}
+
+	c := &client.Client{
+		ClientID: conf.Mqtt.ClientID,
+		ClientName: conf.Mqtt.ClientName,
+		Topic: conf.Mqtt.Topic,
+		Qos: conf.Mqtt.Qos,
+		Keepalive: conf.Mqtt.Keepalive,
+		ConnectRetryDelay: conf.Mqtt.ConnectRetryDelay,
+		WriteToStdOut: conf.Mqtt.WriteToStdOut,
+		WriteToDisk: conf.Mqtt.WriteToDisk,
+		OutputFileName: conf.Mqtt.OutputFileName,
+		Debug: conf.Mqtt.Debug,
+	}
+	c.User = user
+	c.ServerUrl = serverUrl
+	c.AuthHandler = client.NewSm9Auth(c)
 
 	// Connect to the broker
 	err = c.Connect()
@@ -39,4 +71,33 @@ func main() {
 	}
 
 	fmt.Println("shutdown complete")
+}
+
+func InitUser(conf *Config) *client.User {
+	user := &client.User{
+		Uid: []byte(conf.User.Uid),
+		Hid: conf.User.Hid,
+	}
+
+	err := user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	err = user.SetEncryptMasterPublicKey(conf.User.EncryptMasterPublicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	err = user.SetSignMasterPublicKey(conf.User.SignMasterPublicKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return user
 }
