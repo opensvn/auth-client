@@ -1,0 +1,12 @@
+server_url: "tcp://127.0.0.1:1883"
+client_id: "34020000001320000064"
+client_name: "mqtt_client1"
+username: "user1"
+topic: "天气预报"
+qos: 0
+keepalive: 10
+connect_retry_delay: 10
+write_to_stdout: true
+write_to_disk: false
+output_filename: "msg.txt"
+debug: true
