@@ -1,10 +1,11 @@
-package config
+package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 func TestParseConfig(t *testing.T) {
@@ -14,4 +15,6 @@ func TestParseConfig(t *testing.T) {
 	conf := &Config{}
 	err = yaml.Unmarshal(buff, conf)
 	assert.Equal(t, err, nil)
+
+	assert.NotEmpty(t, conf.Mqtt.ServerAddr)
 }
