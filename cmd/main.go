@@ -34,16 +34,18 @@ func main() {
 	}
 
 	c := &client.Client{
-		ClientID: conf.Mqtt.ClientID,
-		ClientName: conf.Mqtt.ClientName,
-		Topic: conf.Mqtt.Topic,
-		Qos: conf.Mqtt.Qos,
-		Keepalive: conf.Mqtt.Keepalive,
-		ConnectRetryDelay: conf.Mqtt.ConnectRetryDelay,
-		WriteToStdOut: conf.Mqtt.WriteToStdOut,
-		WriteToDisk: conf.Mqtt.WriteToDisk,
-		OutputFileName: conf.Mqtt.OutputFileName,
-		Debug: conf.Mqtt.Debug,
+		Config: &client.ClientConfig{
+			ClientID: conf.Mqtt.ClientID,
+			ClientName: conf.Mqtt.ClientName,
+			Topic: conf.Mqtt.Topic,
+			Qos: conf.Mqtt.Qos,
+			Keepalive: conf.Mqtt.Keepalive,
+			ConnectRetryDelay: conf.Mqtt.ConnectRetryDelay,
+			WriteToStdOut: conf.Mqtt.WriteToStdOut,
+			WriteToDisk: conf.Mqtt.WriteToDisk,
+			OutputFileName: conf.Mqtt.OutputFileName,
+			Debug: conf.Mqtt.Debug,
+		},
 	}
 	c.User = user
 	c.ServerUrl = serverUrl

@@ -12,15 +12,7 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 )
 
-type Client struct {
-	c           *paho.Client
-	ServerUrl   *url.URL
-	AuthHandler *Sm9Auth
-	User        *User
-	Cm          *autopaho.ConnectionManager
-	handler     *handler
-	Cancel      context.CancelFunc
-
+type ClientConfig struct {
 	ClientID          string
 	ClientName        string
 	Topic             string
@@ -33,19 +25,30 @@ type Client struct {
 	Debug             bool
 }
 
+type Client struct {
+	c           *paho.Client
+	ServerUrl   *url.URL
+	AuthHandler *Sm9Auth
+	User        *User
+	Cm          *autopaho.ConnectionManager
+	handler     *handler
+	Cancel      context.CancelFunc
+	Config      *ClientConfig
+}
+
 func (c *Client) Connect() error {
 	// Create a handler that will deal with incoming messages
-	c.handler = NewHandler(c.WriteToDisk, c.OutputFileName, c.WriteToStdOut)
+	c.handler = NewHandler(c.Config.WriteToDisk, c.Config.OutputFileName, c.Config.WriteToStdOut)
 
 	cliCfg := autopaho.ClientConfig{
 		BrokerUrls:        []*url.URL{c.ServerUrl},
-		KeepAlive:         c.Keepalive,
-		ConnectRetryDelay: time.Duration(c.ConnectRetryDelay) * time.Millisecond,
+		KeepAlive:         c.Config.Keepalive,
+		ConnectRetryDelay: time.Duration(c.Config.ConnectRetryDelay) * time.Millisecond,
 		OnConnectionUp: func(cm *autopaho.ConnectionManager, connAck *paho.Connack) {
 			fmt.Println("mqtt connection up")
 			if _, err := cm.Subscribe(context.Background(), &paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{
-					c.Topic: {QoS: c.Qos},
+					c.Config.Topic: {QoS: c.Config.Qos},
 				},
 			}); err != nil {
 				fmt.Printf("failed to subscribe (%s). This is likely to mean no messages will be received.", err)
@@ -55,7 +58,7 @@ func (c *Client) Connect() error {
 		},
 		OnConnectError: func(err error) { fmt.Printf("error whilst attempting connection: %s\n", err) },
 		ClientConfig: paho.ClientConfig{
-			ClientID: c.ClientID,
+			ClientID: c.Config.ClientID,
 			Router: paho.NewSingleHandlerRouter(func(m *paho.Publish) {
 				c.handler.handle(m)
 			}),
@@ -86,7 +89,7 @@ func (c *Client) Connect() error {
 				},
 				{
 					Key:   "deviceName",
-					Value: c.ClientName,
+					Value: c.Config.ClientName,
 				},
 			},
 		}
@@ -94,7 +97,7 @@ func (c *Client) Connect() error {
 		return connect
 	})
 
-	if c.Debug {
+	if c.Config.Debug {
 		cliCfg.Debug = logger{prefix: "autoPaho"}
 		cliCfg.PahoDebug = logger{prefix: "paho"}
 	}
