@@ -3,8 +3,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.golang v0.10.1-0.20220310090452-2ab23ddb021d h1:OBpzUPt8Qb0zAr1KOmj5coeELFwRCl53TQepapodGtA=
 github.com/eclipse/paho.golang v0.10.1-0.20220310090452-2ab23ddb021d/go.mod h1:rhrV37IEwauUyx8FHrvmXOKo+QRKng5ncoN1vJiJMcs=
-github.com/emmansun/gmsm v0.13.3 h1:/lIkV5E/wLPMYuUo+lJntoTP+3+yg2M0x3AiqpPvYrU=
-github.com/emmansun/gmsm v0.13.3/go.mod h1:fuOB+pIe9oGQuBF3kuqqW8s8EQR/+nXtk7H08mgmXuM=
+github.com/emmansun/gmsm v0.13.4 h1:RILzendy7R7lWZd8VrAu19lvom6AuOqJxZg0NOXG3O0=
+github.com/emmansun/gmsm v0.13.4/go.mod h1:fuOB+pIe9oGQuBF3kuqqW8s8EQR/+nXtk7H08mgmXuM=
 github.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=

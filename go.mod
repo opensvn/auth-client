@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/eclipse/paho.golang v0.10.1-0.20220310090452-2ab23ddb021d
-	github.com/emmansun/gmsm v0.13.3
+	github.com/emmansun/gmsm v0.13.4
 	github.com/stretchr/testify v1.8.0
 	gopkg.in/yaml.v3 v3.0.1
 )
