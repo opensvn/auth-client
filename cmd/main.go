@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/emmansun/gmsm/sm9"
 	"github.com/opensvn/auth-client"
 	"github.com/opensvn/auth-client/cmd/config"
 	"gopkg.in/yaml.v3"
@@ -145,6 +146,8 @@ func InitUser(conf *config.Config) (*client.User, error) {
 	user := &client.User{
 		Uid: []byte(conf.User.Uid),
 		Hid: conf.User.Hid,
+		EncryptPrivateKey: new(sm9.EncryptPrivateKey),
+		SignPrivateKey: new(sm9.SignPrivateKey),
 	}
 
 	err := user.SetEncryptMasterPublicKey(conf.User.EncryptMasterPublicKey)

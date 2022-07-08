@@ -23,13 +23,11 @@ func (u *User) SetEncryptPrivateKey(s string) error {
 		return err
 	}
 
-	key := new(sm9.EncryptPrivateKey)
-	err = key.UnmarshalASN1(buf)
+	err = u.EncryptPrivateKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
 
-	u.EncryptPrivateKey = key
 	return nil
 }
 
@@ -43,13 +41,11 @@ func (u *User) SetSignPrivateKey(s string) error {
 		return err
 	}
 
-	key := new(sm9.SignPrivateKey)
-	err = key.UnmarshalASN1(buf)
+	err = u.SignPrivateKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
 
-	u.SignPrivateKey = key
 	return nil
 }
 
