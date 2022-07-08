@@ -78,6 +78,19 @@ func main() {
 			log.Printf("init user failed: %v\n", err)
 			return
 		}
+
+		// save yml file
+		buf, err := yaml.Marshal(conf)
+		if err != nil {
+			log.Printf("marshal failed: %v\n", err)
+			return
+		}
+
+		err = ioutil.WriteFile("config/config.yml", buf, 0644)
+		if err != nil {
+			log.Printf("write config file error: %v\n", err)
+			return
+		}
 	}
 
 	serverUrl, err := url.Parse(conf.Mqtt.ServerAddr)
