@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/emmansun/gmsm/sm9"
 	"github.com/opensvn/auth-client"
@@ -30,24 +31,50 @@ func main() {
 		return
 	}
 
-	user, err := InitUser(conf)
+	user := &client.User{
+		Uid: []byte(conf.User.Uid),
+		Hid: conf.User.Hid,
+		EncryptPrivateKey: new(sm9.EncryptPrivateKey),
+		SignPrivateKey: new(sm9.SignPrivateKey),
+	}
+
+	err = initKeys(user, conf)
 	if err != nil {
 		random, err := ApplyKey(conf, user)
 		if err != nil {
-			panic(err)
+			log.Printf("apply key error: %v\n", err)
+			return
 		}
 
 		done := make(chan int, 1)
 		go func () {
 			for {
+				time.Sleep(time.Second * 3)
 				keys, err := queryKey(conf)
 				if err != nil {
 					log.Println(err)
 					continue
 				}
 
+				if keys.EncryptKey == "" || keys.SignKey == "" {
+					continue
+				}
+
 				signKeyBuf, err := hex.DecodeString(keys.SignKey)
 				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				encryptKeyBuf, err := hex.DecodeString(keys.EncryptKey)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				encryptKey, err := OfbEncrypt(random, encryptKeyBuf)
+				if err != nil {
+					log.Println(err)
 					continue
 				}
 
@@ -56,25 +83,15 @@ func main() {
 					continue
 				}
 
-				encryptKeyBuf, err := hex.DecodeString(keys.EncryptKey)
-				if err != nil {
-					continue
-				}
-
-				encryptKey, err := OfbEncrypt(random, encryptKeyBuf)
-				if err != nil {
-					continue
-				}
-
-				conf.User.SignPrivateKey = string(signKey)
-				conf.User.EncryptPrivateKey = string(encryptKey)
+				conf.User.EncryptPrivateKey = hex.EncodeToString(encryptKey)
+				conf.User.SignPrivateKey = hex.EncodeToString(signKey)
 				break
 			}
 			done <- 1
 		}()
 		<-done
 
-		user, err = InitUser(conf)
+		err = initKeys(user, conf)
 		if err != nil {
 			log.Printf("init user failed: %v\n", err)
 			return
@@ -142,33 +159,26 @@ func main() {
 	fmt.Println("shutdown complete")
 }
 
-func InitUser(conf *config.Config) (*client.User, error) {
-	user := &client.User{
-		Uid: []byte(conf.User.Uid),
-		Hid: conf.User.Hid,
-		EncryptPrivateKey: new(sm9.EncryptPrivateKey),
-		SignPrivateKey: new(sm9.SignPrivateKey),
-	}
-
+func initKeys(user *client.User, conf *config.Config) error {
 	err := user.SetEncryptMasterPublicKey(conf.User.EncryptMasterPublicKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = user.SetSignMasterPublicKey(conf.User.SignMasterPublicKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return user, nil
+	return nil
 }

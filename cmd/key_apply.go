@@ -41,6 +41,8 @@ func ApplyKey(conf *config.Config, user *client.User) ([]byte, error) {
 		panic(err)
 	}
 
+	random := buf[:]
+
 	random1, err := sm9.EncryptASN1(rand.Reader, user.GetEncryptMasterPublicKey(), []byte("pkg"), 1, buf)
 	if err != nil {
 		return nil, err
@@ -49,6 +51,7 @@ func ApplyKey(conf *config.Config, user *client.User) ([]byte, error) {
 	req := RegisterRequest{
 		Id:       conf.User.Uid,
 		Username: conf.Mqtt.ClientName,
+		Eid: 	conf.User.Uid,
 		Random:   random1,
 	}
 
@@ -63,7 +66,7 @@ func ApplyKey(conf *config.Config, user *client.User) ([]byte, error) {
 		return nil, err
 	}
 
-	return buf, nil
+	return random, nil
 }
 
 func queryKey(conf *config.Config) (*Keys, error) {
