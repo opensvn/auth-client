@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -27,6 +28,52 @@ func main() {
 	}
 
 	user := InitUser(conf)
+
+	if conf.User.EncryptPrivateKey == "" || conf.User.SignPrivateKey == "" {
+		random, err := ApplyKey(conf, user)
+		if err != nil {
+			panic(err)
+		}
+
+		done := make(chan int, 1)
+		go func () {
+			for {
+				keys, err := queryKey(conf)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				signKeyBuf, err := hex.DecodeString(keys.SignKey)
+				if err != nil {
+					continue
+				}
+
+				signKey, err := OfbEncrypt(random, signKeyBuf)
+				if err != nil {
+					continue
+				}
+
+				encryptKeyBuf, err := hex.DecodeString(keys.EncryptKey)
+				if err != nil {
+					continue
+				}
+
+				encryptKey, err := OfbEncrypt(random, encryptKeyBuf)
+				if err != nil {
+					continue
+				}
+
+				conf.User.SignPrivateKey = string(signKey)
+				conf.User.EncryptPrivateKey = string(encryptKey)
+				break
+			}
+			done <- 1
+		}()
+		<-done
+
+		user = InitUser(conf)
+	}
 
 	serverUrl, err := url.Parse(conf.Mqtt.ServerAddr)
 	if err != nil {
