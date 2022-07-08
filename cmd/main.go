@@ -18,18 +18,19 @@ import (
 func main() {
 	buf, err := ioutil.ReadFile("config/config.yml")
 	if err != nil {
-		panic(err)
+		log.Printf("read config file error: %v\n", err)
+		return
 	}
 
 	conf := &config.Config{}
 	err = yaml.Unmarshal(buf, conf)
 	if err != nil {
-		panic(err)
+		log.Printf("unmarshal config error: %v\n", err)
+		return
 	}
 
-	user := InitUser(conf)
-
-	if conf.User.EncryptPrivateKey == "" || conf.User.SignPrivateKey == "" {
+	user, err := InitUser(conf)
+	if err != nil {
 		random, err := ApplyKey(conf, user)
 		if err != nil {
 			panic(err)
@@ -72,7 +73,11 @@ func main() {
 		}()
 		<-done
 
-		user = InitUser(conf)
+		user, err = InitUser(conf)
+		if err != nil {
+			log.Printf("init user failed: %v\n", err)
+			return
+		}
 	}
 
 	serverUrl, err := url.Parse(conf.Mqtt.ServerAddr)
@@ -123,7 +128,7 @@ func main() {
 	fmt.Println("shutdown complete")
 }
 
-func InitUser(conf *config.Config) *client.User {
+func InitUser(conf *config.Config) (*client.User, error) {
 	user := &client.User{
 		Uid: []byte(conf.User.Uid),
 		Hid: conf.User.Hid,
@@ -131,23 +136,23 @@ func InitUser(conf *config.Config) *client.User {
 
 	err := user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	err = user.SetEncryptMasterPublicKey(conf.User.EncryptMasterPublicKey)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	err = user.SetSignMasterPublicKey(conf.User.SignMasterPublicKey)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return user
+	return user, nil
 }
