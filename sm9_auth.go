@@ -3,6 +3,7 @@ package client
 import (
 	"crypto/rand"
 	"encoding/hex"
+
 	"github.com/eclipse/paho.golang/packets"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/emmansun/gmsm/sm9"
@@ -11,7 +12,7 @@ import (
 type Sm9Auth struct {
 	Random1 string
 	Server  *User
-	client *Client
+	client  *Client
 }
 
 func NewSm9Auth(c *Client) *Sm9Auth {
@@ -39,7 +40,7 @@ func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
 		return reauth
 	}
 
-	decrypted, err := sm9.DecryptASN1(s.client.User.encryptPrivateKey, s.client.User.Uid, buf)
+	decrypted, err := sm9.DecryptASN1(s.client.User.EncryptPrivateKey, s.client.User.Uid, buf)
 	if err != nil {
 		return reauth
 	}

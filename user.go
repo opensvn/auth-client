@@ -2,18 +2,19 @@ package client
 
 import (
 	"encoding/hex"
+
 	"github.com/emmansun/gmsm/sm9"
 )
 
 type User struct {
 	Uid               []byte
 	Hid               byte
-	encryptPrivateKey *sm9.EncryptPrivateKey
-	signPrivateKey    *sm9.SignPrivateKey
+	EncryptPrivateKey *sm9.EncryptPrivateKey
+	SignPrivateKey    *sm9.SignPrivateKey
 }
 
 func (u *User) GetEncryptPrivateKey() *sm9.EncryptPrivateKey {
-	return u.encryptPrivateKey
+	return u.EncryptPrivateKey
 }
 
 func (u *User) SetEncryptPrivateKey(s string) error {
@@ -28,12 +29,12 @@ func (u *User) SetEncryptPrivateKey(s string) error {
 		return err
 	}
 
-	u.encryptPrivateKey = key
+	u.EncryptPrivateKey = key
 	return nil
 }
 
 func (u *User) GetSignPrivateKey() *sm9.SignPrivateKey {
-	return u.signPrivateKey
+	return u.SignPrivateKey
 }
 
 func (u *User) SetSignPrivateKey(s string) error {
@@ -48,12 +49,12 @@ func (u *User) SetSignPrivateKey(s string) error {
 		return err
 	}
 
-	u.signPrivateKey = key
+	u.SignPrivateKey = key
 	return nil
 }
 
 func (u *User) GetEncryptMasterPublicKey() *sm9.EncryptMasterPublicKey {
-	return &u.encryptPrivateKey.EncryptMasterPublicKey
+	return &u.EncryptPrivateKey.EncryptMasterPublicKey
 }
 
 func (u *User) SetEncryptMasterPublicKey(s string) error {
@@ -68,12 +69,12 @@ func (u *User) SetEncryptMasterPublicKey(s string) error {
 		return err
 	}
 
-	u.encryptPrivateKey.EncryptMasterPublicKey = *key
+	u.EncryptPrivateKey.EncryptMasterPublicKey = *key
 	return nil
 }
 
 func (u *User) GetSignMasterPublicKey() *sm9.SignMasterPublicKey {
-	return &u.signPrivateKey.SignMasterPublicKey
+	return &u.SignPrivateKey.SignMasterPublicKey
 }
 
 func (u *User) SetSignMasterPublicKey(s string) error {
@@ -88,6 +89,6 @@ func (u *User) SetSignMasterPublicKey(s string) error {
 		return err
 	}
 
-	u.signPrivateKey.SignMasterPublicKey = *key
+	u.SignPrivateKey.SignMasterPublicKey = *key
 	return nil
 }
