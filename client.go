@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"net/url"
 	"time"
 
@@ -26,7 +25,6 @@ type ClientConfig struct {
 }
 
 type Client struct {
-	c           *paho.Client
 	ServerUrl   *url.URL
 	AuthHandler *Sm9Auth
 	User        *User
@@ -115,28 +113,29 @@ func (c *Client) Connect() error {
 }
 
 func (c *Client) Subscribe(topic string) error {
-	if _, err := c.c.Subscribe(context.Background(), &paho.Subscribe{
+	subPacket := &paho.Subscribe{
 		Subscriptions: map[string]paho.SubscribeOptions{
-			topic: {QoS: byte(0), NoLocal: true},
+			topic: {QoS: c.Config.Qos},
 		},
-	}); err != nil {
-		log.Println(err)
+	}
+	if _, err := c.Cm.Subscribe(context.Background(), subPacket); err != nil {
+		fmt.Printf("failed to subscribe (%s). This is likely to mean no messages will be received.", err)
 		return err
 	}
 
-	log.Printf("Subscribed to %s", topic)
+	fmt.Printf("Subscribed to %s", topic)
 	return nil
 }
 
 func (c *Client) Publish(topic, payload string) error {
-	pb := &paho.Publish{
+	pubPacket := &paho.Publish{
 		Topic:   topic,
 		QoS:     byte(0),
 		Payload: []byte(payload),
 	}
 
-	if _, err := c.c.Publish(context.Background(), pb); err != nil {
-		log.Println(err)
+	if _, err := c.Cm.Publish(context.Background(), pubPacket); err != nil {
+		fmt.Println(err)
 		return err
 	}
 
