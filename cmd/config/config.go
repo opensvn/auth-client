@@ -1,4 +1,4 @@
-package main
+package config
 
 type MqttConfig struct {
 	ServerAddr        string `yaml:"server_addr"`         // MQTT server URL

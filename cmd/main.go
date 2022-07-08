@@ -10,16 +10,17 @@ import (
 	"syscall"
 
 	"github.com/opensvn/auth-client"
+	"github.com/opensvn/auth-client/cmd/config"
 	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	buf, err := ioutil.ReadFile("config.yml")
+	buf, err := ioutil.ReadFile("config/config.yml")
 	if err != nil {
 		panic(err)
 	}
 
-	conf := &Config{}
+	conf := &config.Config{}
 	err = yaml.Unmarshal(buf, conf)
 	if err != nil {
 		panic(err)
@@ -75,7 +76,7 @@ func main() {
 	fmt.Println("shutdown complete")
 }
 
-func InitUser(conf *Config) *client.User {
+func InitUser(conf *config.Config) *client.User {
 	user := &client.User{
 		Uid: []byte(conf.User.Uid),
 		Hid: conf.User.Hid,
