@@ -23,8 +23,13 @@ type UserConfig struct {
 	SignMasterPublicKey    string `yaml:"sign_master_public_key"`
 }
 
+type RaConfig struct {
+	Addr string `yaml:"addr"`
+}
+
 // Config holds the configuration
 type Config struct {
 	Mqtt MqttConfig `yaml:"mqtt"`
 	User UserConfig `yaml:"user"`
+	Ra   RaConfig   `yaml:"ra"`
 }

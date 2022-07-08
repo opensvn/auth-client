@@ -18,4 +18,5 @@ func TestParseConfig(t *testing.T) {
 
 	assert.NotEmpty(t, conf.Mqtt.ServerAddr)
 	assert.NotEmpty(t, conf.User.Uid)
+	assert.NotEmpty(t, conf.Ra.Addr)
 }
