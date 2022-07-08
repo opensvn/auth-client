@@ -147,22 +147,22 @@ func InitUser(conf *config.Config) (*client.User, error) {
 		Hid: conf.User.Hid,
 	}
 
-	err := user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	err = user.SetEncryptMasterPublicKey(conf.User.EncryptMasterPublicKey)
-	if err != nil {
-		return nil, err
-	}
-
-	err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
+	err := user.SetEncryptMasterPublicKey(conf.User.EncryptMasterPublicKey)
 	if err != nil {
 		return nil, err
 	}
 
 	err = user.SetSignMasterPublicKey(conf.User.SignMasterPublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	err = user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
 	if err != nil {
 		return nil, err
 	}
