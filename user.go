@@ -27,8 +27,7 @@ func NewUser(conf *UserConfig) *User {
 		return nil
 	}
 
-	if conf.EncryptPrivateKey == "" || conf.EncryptMasterPublicKey == "" ||
-		conf.SignPrivateKey == "" || conf.SignMasterPublicKey == "" {
+	if conf.EncryptMasterPublicKey == "" || conf.SignMasterPublicKey == "" {
 		return nil
 	}
 
@@ -51,23 +50,26 @@ func (u *User) GetEncryptPrivateKey() *sm9.EncryptPrivateKey {
 }
 
 func (u *User) SetEncryptPrivateKey(encPrivateKey, encMasterPublicKey string) error {
-	buf, err := hex.DecodeString(encPrivateKey)
+	key := new(sm9.EncryptPrivateKey)
+	if encPrivateKey != "" {
+		buf, err := hex.DecodeString(encPrivateKey)
+		if err != nil {
+			return err
+		}
+
+		err = key.UnmarshalASN1(buf)
+		if err != nil {
+			return err
+		}
+	}
+
+	buf, err := hex.DecodeString(encMasterPublicKey)
+	err = key.EncryptMasterPublicKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
 
-	u.encryptPrivateKey = new(sm9.EncryptPrivateKey)
-	err = u.encryptPrivateKey.UnmarshalASN1(buf)
-	if err != nil {
-		return err
-	}
-
-	buf, err = hex.DecodeString(encMasterPublicKey)
-	err = u.encryptPrivateKey.EncryptMasterPublicKey.UnmarshalASN1(buf)
-	if err != nil {
-		return err
-	}
-
+	u.encryptPrivateKey = key
 	return nil
 }
 
@@ -76,23 +78,26 @@ func (u *User) GetSignPrivateKey() *sm9.SignPrivateKey {
 }
 
 func (u *User) SetSignPrivateKey(signPrivateKey, signMasterPublicKey string) error {
-	buf, err := hex.DecodeString(signPrivateKey)
+	key := new(sm9.SignPrivateKey)
+	if signPrivateKey != "" {
+		buf, err := hex.DecodeString(signPrivateKey)
+		if err != nil {
+			return err
+		}
+
+		err = key.UnmarshalASN1(buf)
+		if err != nil {
+			return err
+		}
+	}
+
+	buf, err := hex.DecodeString(signMasterPublicKey)
+	err = key.SignMasterPublicKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
 
-	u.signPrivateKey = new(sm9.SignPrivateKey)
-	err = u.signPrivateKey.UnmarshalASN1(buf)
-	if err != nil {
-		return err
-	}
-
-	buf, err = hex.DecodeString(signMasterPublicKey)
-	err = u.signPrivateKey.SignMasterPublicKey.UnmarshalASN1(buf)
-	if err != nil {
-		return err
-	}
-
+	u.signPrivateKey = key
 	return nil
 }
 
