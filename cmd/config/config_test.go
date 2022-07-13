@@ -10,11 +10,11 @@ import (
 
 func TestParseConfig(t *testing.T) {
 	buff, err := ioutil.ReadFile("config.yml")
-	assert.Equal(t, err, nil)
+	assert.Nil(t, err)
 
 	conf := &Config{}
 	err = yaml.Unmarshal(buff, conf)
-	assert.Equal(t, err, nil)
+	assert.Nil(t, err)
 
 	assert.NotEmpty(t, conf.Mqtt.ServerAddr)
 	assert.NotEmpty(t, conf.User.Uid)
