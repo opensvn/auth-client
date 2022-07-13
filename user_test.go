@@ -13,7 +13,23 @@ func TestNewUser(t *testing.T) {
 		assert.Nil(t, u)
 	})
 
-	t.Run("success", func(t *testing.T) {
+	t.Run("empty encrypt and sign private key", func(t *testing.T) {
+		conf := &UserConfig{
+			Uid:                    "uid",
+			Hid:                    1,
+			EncryptMasterPublicKey: "034200049174542668e8f14ab273c0945c3690c66e5dd09678b86f734c4350567ed0628354e598c6bf749a3dacc9fffedd9db6866c50457cfc7aa2a4ad65c3168ff74210",
+			SignMasterPublicKey:    "03818200049f64080b3084f733e48aff4b41b565011ce0711c5e392cfb0ab1b6791b94c40829dba116152d1f786ce843ed24a3b573414d2177386a92dd8f14d65696ea5e3269850938abea0112b57329f447e3a0cbad3e2fdb1a77f335e89e1408d0ef1c2541e00a53dda532da1a7ce027b7a46f741006e85f5cdff0730e75c05fb4e3216d",
+		}
+		u := NewUser(conf)
+
+		assert.NotNil(t, u)
+		assert.Nil(t, u.GetEncryptPrivateKey())
+		assert.Nil(t, u.GetSignPrivateKey())
+		assert.NotNil(t, u.GetEncryptMasterPublicKey())
+		assert.NotNil(t, u.GetSignMasterPublicKey())
+	})
+
+	t.Run("full config", func(t *testing.T) {
 		conf := &UserConfig{
 			Uid:                    "uid",
 			Hid:                    1,
@@ -27,5 +43,7 @@ func TestNewUser(t *testing.T) {
 		assert.NotNil(t, u)
 		assert.NotNil(t, u.GetEncryptPrivateKey())
 		assert.NotNil(t, u.GetSignPrivateKey())
+		assert.NotNil(t, u.GetEncryptMasterPublicKey())
+		assert.NotNil(t, u.GetSignMasterPublicKey())
 	})
 }

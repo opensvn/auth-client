@@ -16,10 +16,12 @@ type UserConfig struct {
 }
 
 type User struct {
-	Uid               []byte
-	Hid               byte
-	encryptPrivateKey *sm9.EncryptPrivateKey
-	signPrivateKey    *sm9.SignPrivateKey
+	Uid                    []byte
+	Hid                    byte
+	encryptPrivateKey      *sm9.EncryptPrivateKey
+	signPrivateKey         *sm9.SignPrivateKey
+	encryptMasterPublicKey *sm9.EncryptMasterPublicKey
+	signMasterPublicKey    *sm9.SignMasterPublicKey
 }
 
 func NewUser(conf *UserConfig) *User {
@@ -32,15 +34,18 @@ func NewUser(conf *UserConfig) *User {
 	}
 
 	u := &User{Uid: []byte(conf.Uid), Hid: conf.Hid}
-	err := u.SetEncryptPrivateKey(conf.EncryptPrivateKey, conf.EncryptMasterPublicKey)
+	err := u.SetEncryptMasterPublicKey(conf.EncryptMasterPublicKey)
 	if err != nil {
 		return nil
 	}
 
-	err = u.SetSignPrivateKey(conf.SignPrivateKey, conf.SignMasterPublicKey)
+	err = u.SetSignMasterPublicKey(conf.SignMasterPublicKey)
 	if err != nil {
 		return nil
 	}
+
+	_ = u.SetEncryptPrivateKey(conf.EncryptPrivateKey)
+	_ = u.SetSignPrivateKey(conf.SignPrivateKey)
 
 	return u
 }
@@ -49,22 +54,14 @@ func (u *User) GetEncryptPrivateKey() *sm9.EncryptPrivateKey {
 	return u.encryptPrivateKey
 }
 
-func (u *User) SetEncryptPrivateKey(encPrivateKey, encMasterPublicKey string) error {
-	key := new(sm9.EncryptPrivateKey)
-	if encPrivateKey != "" {
-		buf, err := hex.DecodeString(encPrivateKey)
-		if err != nil {
-			return err
-		}
-
-		err = key.UnmarshalASN1(buf)
-		if err != nil {
-			return err
-		}
+func (u *User) SetEncryptPrivateKey(encPrivateKey string) error {
+	buf, err := hex.DecodeString(encPrivateKey)
+	if err != nil {
+		return err
 	}
 
-	buf, err := hex.DecodeString(encMasterPublicKey)
-	err = key.EncryptMasterPublicKey.UnmarshalASN1(buf)
+	key := new(sm9.EncryptPrivateKey)
+	err = key.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
@@ -77,22 +74,14 @@ func (u *User) GetSignPrivateKey() *sm9.SignPrivateKey {
 	return u.signPrivateKey
 }
 
-func (u *User) SetSignPrivateKey(signPrivateKey, signMasterPublicKey string) error {
-	key := new(sm9.SignPrivateKey)
-	if signPrivateKey != "" {
-		buf, err := hex.DecodeString(signPrivateKey)
-		if err != nil {
-			return err
-		}
-
-		err = key.UnmarshalASN1(buf)
-		if err != nil {
-			return err
-		}
+func (u *User) SetSignPrivateKey(signPrivateKey string) error {
+	buf, err := hex.DecodeString(signPrivateKey)
+	if err != nil {
+		return err
 	}
 
-	buf, err := hex.DecodeString(signMasterPublicKey)
-	err = key.SignMasterPublicKey.UnmarshalASN1(buf)
+	key := new(sm9.SignPrivateKey)
+	err = key.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
@@ -102,15 +91,41 @@ func (u *User) SetSignPrivateKey(signPrivateKey, signMasterPublicKey string) err
 }
 
 func (u *User) GetEncryptMasterPublicKey() *sm9.EncryptMasterPublicKey {
-	if u.encryptPrivateKey == nil {
-		return nil
+	return u.encryptMasterPublicKey
+}
+
+func (u *User) SetEncryptMasterPublicKey(encMasterPublicKey string) error {
+	buf, err := hex.DecodeString(encMasterPublicKey)
+	if err != nil {
+		return err
 	}
-	return &u.encryptPrivateKey.EncryptMasterPublicKey
+
+	key := new(sm9.EncryptMasterPublicKey)
+	err = key.UnmarshalASN1(buf)
+	if err != nil {
+		return err
+	}
+
+	u.encryptMasterPublicKey = key
+	return nil
 }
 
 func (u *User) GetSignMasterPublicKey() *sm9.SignMasterPublicKey {
-	if u.signPrivateKey == nil {
-		return nil
+	return u.signMasterPublicKey
+}
+
+func (u *User) SetSignMasterPublicKey(signMasterPublicKey string) error {
+	buf, err := hex.DecodeString(signMasterPublicKey)
+	if err != nil {
+		return err
 	}
-	return &u.signPrivateKey.SignMasterPublicKey
+
+	key := new(sm9.SignMasterPublicKey)
+	err = key.UnmarshalASN1(buf)
+	if err != nil {
+		return err
+	}
+
+	u.signMasterPublicKey = key
+	return nil
 }
