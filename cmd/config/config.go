@@ -1,5 +1,7 @@
 package config
 
+import "github.com/opensvn/auth-client"
+
 type MqttConfig struct {
 	ServerAddr        string `yaml:"server_addr"`         // MQTT server URL
 	ClientID          string `yaml:"client_id"`           // client id to use when connecting to server
@@ -14,15 +16,6 @@ type MqttConfig struct {
 	Debug             bool   `yaml:"debug"`               // autopaho and paho debug output requested
 }
 
-type UserConfig struct {
-	Uid                    string `yaml:"uid"`
-	Hid                    byte   `yaml:"hid"`
-	EncryptPrivateKey      string `yaml:"encrypt_private_key"`
-	SignPrivateKey         string `yaml:"sign_private_key"`
-	EncryptMasterPublicKey string `yaml:"encrypt_master_public_key"`
-	SignMasterPublicKey    string `yaml:"sign_master_public_key"`
-}
-
 type AddrConfig struct {
 	Ra       string `yaml:"ra"`
 	Platform string `yaml:"platform"`
@@ -30,7 +23,7 @@ type AddrConfig struct {
 
 // Config holds the configuration
 type Config struct {
-	Mqtt MqttConfig `yaml:"mqtt"`
-	User UserConfig `yaml:"user"`
-	Addr AddrConfig `yaml:"addr"`
+	Mqtt MqttConfig        `yaml:"mqtt"`
+	User client.UserConfig `yaml:"user"`
+	Addr AddrConfig        `yaml:"addr"`
 }

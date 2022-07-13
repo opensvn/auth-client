@@ -18,8 +18,8 @@ type UserConfig struct {
 type User struct {
 	Uid               []byte
 	Hid               byte
-	EncryptPrivateKey *sm9.EncryptPrivateKey
-	SignPrivateKey    *sm9.SignPrivateKey
+	encryptPrivateKey *sm9.EncryptPrivateKey
+	signPrivateKey    *sm9.SignPrivateKey
 }
 
 func NewUser(conf *UserConfig) *User {
@@ -47,7 +47,7 @@ func NewUser(conf *UserConfig) *User {
 }
 
 func (u *User) GetEncryptPrivateKey() *sm9.EncryptPrivateKey {
-	return u.EncryptPrivateKey
+	return u.encryptPrivateKey
 }
 
 func (u *User) SetEncryptPrivateKey(encPrivateKey, encMasterPublicKey string) error {
@@ -56,14 +56,14 @@ func (u *User) SetEncryptPrivateKey(encPrivateKey, encMasterPublicKey string) er
 		return err
 	}
 
-	u.EncryptPrivateKey = new(sm9.EncryptPrivateKey)
-	err = u.EncryptPrivateKey.UnmarshalASN1(buf)
+	u.encryptPrivateKey = new(sm9.EncryptPrivateKey)
+	err = u.encryptPrivateKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
 
 	buf, err = hex.DecodeString(encMasterPublicKey)
-	err = u.EncryptPrivateKey.EncryptMasterPublicKey.UnmarshalASN1(buf)
+	err = u.encryptPrivateKey.EncryptMasterPublicKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (u *User) SetEncryptPrivateKey(encPrivateKey, encMasterPublicKey string) er
 }
 
 func (u *User) GetSignPrivateKey() *sm9.SignPrivateKey {
-	return u.SignPrivateKey
+	return u.signPrivateKey
 }
 
 func (u *User) SetSignPrivateKey(signPrivateKey, signMasterPublicKey string) error {
@@ -81,14 +81,14 @@ func (u *User) SetSignPrivateKey(signPrivateKey, signMasterPublicKey string) err
 		return err
 	}
 
-	u.SignPrivateKey = new(sm9.SignPrivateKey)
-	err = u.SignPrivateKey.UnmarshalASN1(buf)
+	u.signPrivateKey = new(sm9.SignPrivateKey)
+	err = u.signPrivateKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
 
 	buf, err = hex.DecodeString(signMasterPublicKey)
-	err = u.SignPrivateKey.SignMasterPublicKey.UnmarshalASN1(buf)
+	err = u.signPrivateKey.SignMasterPublicKey.UnmarshalASN1(buf)
 	if err != nil {
 		return err
 	}
@@ -97,15 +97,15 @@ func (u *User) SetSignPrivateKey(signPrivateKey, signMasterPublicKey string) err
 }
 
 func (u *User) GetEncryptMasterPublicKey() *sm9.EncryptMasterPublicKey {
-	if u.EncryptPrivateKey == nil {
+	if u.encryptPrivateKey == nil {
 		return nil
 	}
-	return &u.EncryptPrivateKey.EncryptMasterPublicKey
+	return &u.encryptPrivateKey.EncryptMasterPublicKey
 }
 
 func (u *User) GetSignMasterPublicKey() *sm9.SignMasterPublicKey {
-	if u.SignPrivateKey == nil {
+	if u.signPrivateKey == nil {
 		return nil
 	}
-	return &u.SignPrivateKey.SignMasterPublicKey
+	return &u.signPrivateKey.SignMasterPublicKey
 }

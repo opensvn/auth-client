@@ -40,7 +40,7 @@ func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
 		return reauth
 	}
 
-	decrypted, err := sm9.DecryptASN1(s.client.User.EncryptPrivateKey, s.client.User.Uid, buf)
+	decrypted, err := sm9.DecryptASN1(s.client.User.GetEncryptPrivateKey(), s.client.User.Uid, buf)
 	if err != nil {
 		return reauth
 	}

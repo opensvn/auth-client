@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/emmansun/gmsm/sm9"
 	"github.com/opensvn/auth-client"
 	"github.com/opensvn/auth-client/cmd/config"
 	"gopkg.in/yaml.v3"
@@ -31,15 +30,8 @@ func main() {
 		return
 	}
 
-	user := &client.User{
-		Uid: []byte(conf.User.Uid),
-		Hid: conf.User.Hid,
-		EncryptPrivateKey: new(sm9.EncryptPrivateKey),
-		SignPrivateKey: new(sm9.SignPrivateKey),
-	}
-
-	err = initKeys(user, conf)
-	if err != nil {
+	user := client.NewUser(&conf.User)
+	if user == nil {
 		random, err := ApplyKey(conf, user)
 		if err != nil {
 			log.Printf("apply key error: %v\n", err)
@@ -91,9 +83,9 @@ func main() {
 		}()
 		<-done
 
-		err = initKeys(user, conf)
-		if err != nil {
-			log.Printf("init user failed: %v\n", err)
+		user = client.NewUser(&conf.User)
+		if user == nil {
+			log.Println("init user failed")
 			return
 		}
 
@@ -157,28 +149,4 @@ func main() {
 	}
 
 	fmt.Println("shutdown complete")
-}
-
-func initKeys(user *client.User, conf *config.Config) error {
-	err := user.SetEncryptMasterPublicKey(conf.User.EncryptMasterPublicKey)
-	if err != nil {
-		return err
-	}
-
-	err = user.SetSignMasterPublicKey(conf.User.SignMasterPublicKey)
-	if err != nil {
-		return err
-	}
-
-	err = user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
-	if err != nil {
-		return err
-	}
-
-	err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
