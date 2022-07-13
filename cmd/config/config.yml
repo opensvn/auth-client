@@ -2,6 +2,7 @@ mqtt:
   server_addr: "tcp://127.0.0.1:1883"
   client_id: "34020000001320000064"
   client_name: "mqtt_client1"
+  device_type: "MQTT_SM9_CLIENT"
   topic: "天气预报"
   qos: 0
   keepalive: 10

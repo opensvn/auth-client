@@ -6,6 +6,7 @@ type MqttConfig struct {
 	ServerAddr        string `yaml:"server_addr"`         // MQTT server URL
 	ClientID          string `yaml:"client_id"`           // client id to use when connecting to server
 	ClientName        string `yaml:"client_name"`         // client name
+	DeviceType        string `yaml:"device_type"`         // device type
 	Topic             string `yaml:"topic"`               // topic on which to publish messaged
 	Qos               byte   `yaml:"qos"`                 // qos to use when publishing
 	Keepalive         uint16 `yaml:"keepalive"`           // seconds between keepalive packets

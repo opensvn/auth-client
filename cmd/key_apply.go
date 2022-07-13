@@ -18,10 +18,11 @@ import (
 var iv = []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
 
 type RegisterRequest struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
-	Eid      string `json:"eid"`
-	Random   []byte `json:"random"`
+	Id         string `json:"id"`
+	Username   string `json:"username"`
+	Eid        string `json:"eid"`
+	Random     []byte `json:"random"`
+	DeviceType string `json:"device_type"`
 }
 
 type Keys struct {
@@ -51,8 +52,9 @@ func ApplyKey(conf *config.Config, user *client.User) ([]byte, error) {
 	req := RegisterRequest{
 		Id:       conf.User.Uid,
 		Username: conf.Mqtt.ClientName,
-		Eid: 	conf.User.Uid,
+		Eid:      conf.User.Uid,
 		Random:   random1,
+		DeviceType: conf.Mqtt.DeviceType,
 	}
 
 	buf, err = json.Marshal(req)
