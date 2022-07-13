@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/hex"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -31,14 +31,15 @@ func main() {
 	}
 
 	user := client.NewUser(&conf.User)
-	if user == nil {
+	if user == nil || user.GetEncryptPrivateKey() == nil || user.GetSignPrivateKey() == nil {
 		random, err := ApplyKey(conf, user)
 		if err != nil {
 			log.Printf("apply key error: %v\n", err)
 			return
 		}
 
-		done := make(chan int, 1)
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
 		go func () {
 			for {
 				time.Sleep(time.Second * 3)
@@ -79,13 +80,19 @@ func main() {
 				conf.User.SignPrivateKey = hex.EncodeToString(signKey)
 				break
 			}
-			done <- 1
+			wg.Done()
 		}()
-		<-done
+		wg.Wait()
 
-		user = client.NewUser(&conf.User)
-		if user == nil {
-			log.Println("init user failed")
+		err = user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
+		if err != nil {
+			log.Printf("set encrypt private key error: %v\n", err)
+			return
+		}
+
+		err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
+		if err != nil {
+			log.Printf("set sign private key error: %v\n", err)
 			return
 		}
 
@@ -140,13 +147,10 @@ func main() {
 	signal.Notify(sig, syscall.SIGTERM)
 
 	<-sig
-	fmt.Println("signal caught - exiting")
 
 	// We could cancel the context at this point but will call Disconnect instead (this waits for autopaho to shutdown)
 	err = c.Disconnect()
 	if err != nil {
 		log.Printf("%s\n", err)
 	}
-
-	fmt.Println("shutdown complete")
 }
