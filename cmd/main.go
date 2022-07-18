@@ -133,6 +133,7 @@ func main() {
 	c.User = user
 	c.ServerUrl = serverUrl
 	c.AuthHandler = client.NewSm9Auth(c)
+	c.SetMsgHandler(HandlePublishMsg)
 
 	// Connect to the broker
 	err = c.Connect()
