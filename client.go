@@ -29,15 +29,16 @@ type Client struct {
 	AuthHandler *Sm9Auth
 	User        *User
 	Cm          *autopaho.ConnectionManager
-	handler     *handler
 	Cancel      context.CancelFunc
 	Config      *ClientConfig
+	MsgHandler  paho.MessageHandler
+}
+
+func (c *Client) SetMsgHandler(handler paho.MessageHandler) {
+	c.MsgHandler = handler
 }
 
 func (c *Client) Connect() error {
-	// Create a handler that will deal with incoming messages
-	c.handler = NewHandler(c.Config.WriteToDisk, c.Config.OutputFileName, c.Config.WriteToStdOut)
-
 	cliCfg := autopaho.ClientConfig{
 		BrokerUrls:        []*url.URL{c.ServerUrl},
 		KeepAlive:         c.Config.Keepalive,
@@ -58,7 +59,9 @@ func (c *Client) Connect() error {
 		ClientConfig: paho.ClientConfig{
 			ClientID: c.Config.ClientID,
 			Router: paho.NewSingleHandlerRouter(func(m *paho.Publish) {
-				c.handler.handle(m)
+				if c.MsgHandler != nil {
+					c.MsgHandler(m)
+				}
 			}),
 			OnClientError: func(err error) { fmt.Printf("server requested disconnect: %s\n", err) },
 			OnServerDisconnect: func(d *paho.Disconnect) {
@@ -143,7 +146,6 @@ func (c *Client) Publish(topic, payload string) error {
 }
 
 func (c *Client) Disconnect() error {
-	defer c.handler.Close()
 	defer c.Cancel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
