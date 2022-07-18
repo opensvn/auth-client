@@ -141,12 +141,27 @@ func main() {
 		return
 	}
 
+	quit := make(chan struct{})
+	go func() {
+		// Publish a message to server periodly
+		for {
+			select {
+			case <-quit:
+				return
+			default:
+				time.Sleep(time.Second * 30)
+				_ = c.Publish("test", "test")
+			}
+		}
+	}()
+
 	// Messages will be handled through the callback so we really just need to wait until a shutdown is requested
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	signal.Notify(sig, syscall.SIGTERM)
 
 	<-sig
+	close(quit)
 
 	// We could cancel the context at this point but will call Disconnect instead (this waits for autopaho to shutdown)
 	err = c.Disconnect()
