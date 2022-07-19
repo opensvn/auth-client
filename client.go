@@ -12,15 +12,11 @@ import (
 )
 
 type ClientConfig struct {
-	ClientID          string
-	ClientName        string
+	Name              string
 	Topic             string
 	Qos               byte
 	Keepalive         uint16
 	ConnectRetryDelay uint16
-	WriteToStdOut     bool
-	WriteToDisk       bool
-	OutputFileName    string
 	Debug             bool
 }
 
@@ -57,7 +53,7 @@ func (c *Client) Connect() error {
 		},
 		OnConnectError: func(err error) { fmt.Printf("error whilst attempting connection: %s\n", err) },
 		ClientConfig: paho.ClientConfig{
-			ClientID: c.Config.ClientID,
+			ClientID: string(c.User.Uid),
 			Router: paho.NewSingleHandlerRouter(func(m *paho.Publish) {
 				if c.MsgHandler != nil {
 					c.MsgHandler(m)
@@ -90,7 +86,7 @@ func (c *Client) Connect() error {
 				},
 				{
 					Key:   "deviceName",
-					Value: c.Config.ClientName,
+					Value: c.Config.Name,
 				},
 			},
 		}

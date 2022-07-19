@@ -40,7 +40,7 @@ func main() {
 
 		wg := &sync.WaitGroup{}
 		wg.Add(1)
-		go func () {
+		go func() {
 			for {
 				time.Sleep(time.Second * 3)
 				keys, err := queryKey(conf)
@@ -118,16 +118,12 @@ func main() {
 
 	c := &client.Client{
 		Config: &client.ClientConfig{
-			ClientID: conf.Mqtt.ClientID,
-			ClientName: conf.Mqtt.ClientName,
-			Topic: conf.Mqtt.Topic,
-			Qos: conf.Mqtt.Qos,
-			Keepalive: conf.Mqtt.Keepalive,
+			Name:              conf.Mqtt.ClientName,
+			Topic:             conf.Mqtt.Topic,
+			Qos:               conf.Mqtt.Qos,
+			Keepalive:         conf.Mqtt.Keepalive,
 			ConnectRetryDelay: conf.Mqtt.ConnectRetryDelay,
-			WriteToStdOut: conf.Mqtt.WriteToStdOut,
-			WriteToDisk: conf.Mqtt.WriteToDisk,
-			OutputFileName: conf.Mqtt.OutputFileName,
-			Debug: conf.Mqtt.Debug,
+			Debug:             conf.Mqtt.Debug,
 		},
 	}
 	c.User = user
