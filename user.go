@@ -18,6 +18,7 @@ type UserConfig struct {
 type User struct {
 	Uid                    []byte
 	Hid                    byte
+	SessionKey             []byte
 	encryptPrivateKey      *sm9.EncryptPrivateKey
 	signPrivateKey         *sm9.SignPrivateKey
 	encryptMasterPublicKey *sm9.EncryptMasterPublicKey

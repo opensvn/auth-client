@@ -127,10 +127,15 @@ func (c *Client) Subscribe(topic string) error {
 }
 
 func (c *Client) Publish(topic, payload string) error {
+	encPayload, err := OfbEncrypt(c.User.SessionKey, []byte(payload))
+	if err != nil {
+		return err
+	}
+
 	pubPacket := &paho.Publish{
 		Topic:   topic,
 		QoS:     byte(0),
-		Payload: []byte(payload),
+		Payload: []byte(hex.EncodeToString(encPayload)),
 	}
 
 	if _, err := c.Cm.Publish(context.Background(), pubPacket); err != nil {

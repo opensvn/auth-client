@@ -45,6 +45,8 @@ func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
 		return reauth
 	}
 
+	s.client.User.SessionKey = decrypted
+
 	random1 := decrypted[:len(decrypted)/2]
 	if s.Random1 != hex.EncodeToString(random1) {
 		return reauth

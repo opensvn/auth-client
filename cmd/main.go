@@ -65,13 +65,13 @@ func main() {
 					continue
 				}
 
-				encryptKey, err := OfbEncrypt(random, encryptKeyBuf)
+				encryptKey, err := client.OfbEncrypt(random, encryptKeyBuf)
 				if err != nil {
 					log.Println(err)
 					continue
 				}
 
-				signKey, err := OfbEncrypt(random, signKeyBuf)
+				signKey, err := client.OfbEncrypt(random, signKeyBuf)
 				if err != nil {
 					continue
 				}
