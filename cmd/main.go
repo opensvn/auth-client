@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -13,11 +12,13 @@ import (
 
 	"github.com/opensvn/auth-client"
 	"github.com/opensvn/auth-client/cmd/config"
+	"github.com/opensvn/auth-client/log"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	buf, err := ioutil.ReadFile("config/config.yml")
+	buf, err := os.ReadFile("config/config.yml")
 	if err != nil {
 		log.Printf("read config file error: %v\n", err)
 		return
@@ -30,11 +31,13 @@ func main() {
 		return
 	}
 
+	logging.InitLogger(conf.Log.Level, conf.Log.Path)
+
 	user := client.NewUser(&conf.User)
 	if user == nil || user.GetEncryptPrivateKey() == nil || user.GetSignPrivateKey() == nil {
 		random, err := ApplyKey(conf, user)
 		if err != nil {
-			log.Printf("apply key error: %v\n", err)
+			logging.Logger.Error("apply key error", zap.Error(err))
 			return
 		}
 
@@ -45,7 +48,7 @@ func main() {
 				time.Sleep(time.Second * 3)
 				keys, err := queryKey(conf)
 				if err != nil {
-					log.Println(err)
+					logging.Logger.Error("query key", zap.Error(err))
 					continue
 				}
 
@@ -55,24 +58,25 @@ func main() {
 
 				signKeyBuf, err := hex.DecodeString(keys.SignKey)
 				if err != nil {
-					log.Println(err)
+					logging.Logger.Error("decode string", zap.Error(err))
 					continue
 				}
 
 				encryptKeyBuf, err := hex.DecodeString(keys.EncryptKey)
 				if err != nil {
-					log.Println(err)
+					logging.Logger.Error("decode string", zap.Error(err))
 					continue
 				}
 
 				encryptKey, err := client.OfbEncrypt(random, encryptKeyBuf)
 				if err != nil {
-					log.Println(err)
+					logging.Logger.Error("encrypt", zap.Error(err))
 					continue
 				}
 
 				signKey, err := client.OfbEncrypt(random, signKeyBuf)
 				if err != nil {
+					logging.Logger.Error("encrypt", zap.Error(err))
 					continue
 				}
 
@@ -86,33 +90,33 @@ func main() {
 
 		err = user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
 		if err != nil {
-			log.Printf("set encrypt private key error: %v\n", err)
+			logging.Logger.Error("set encrypt private key error", zap.Error(err))
 			return
 		}
 
 		err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
 		if err != nil {
-			log.Printf("set sign private key error: %v\n", err)
+			logging.Logger.Error("set sign private key error", zap.Error(err))
 			return
 		}
 
 		// save yml file
 		buf, err := yaml.Marshal(conf)
 		if err != nil {
-			log.Printf("marshal failed: %v\n", err)
+			logging.Logger.Error("marshal failed", zap.Error(err))
 			return
 		}
 
-		err = ioutil.WriteFile("config/config.yml", buf, 0644)
+		err = os.WriteFile("config/config.yml", buf, 0644)
 		if err != nil {
-			log.Printf("write config file error: %v\n", err)
+			logging.Logger.Error("write config file error", zap.Error(err))
 			return
 		}
 	}
 
 	serverUrl, err := url.Parse(conf.Mqtt.ServerAddr)
 	if err != nil {
-		log.Printf("%s\n", err)
+		logging.Logger.Error("url parse", zap.Error(err))
 		return
 	}
 
@@ -134,7 +138,7 @@ func main() {
 	// Connect to the broker
 	err = c.Connect()
 	if err != nil {
-		log.Printf("%s\n", err)
+		logging.Logger.Error("connect", zap.Error(err))
 		return
 	}
 
@@ -163,6 +167,6 @@ func main() {
 	// We could cancel the context at this point but will call Disconnect instead (this waits for autopaho to shutdown)
 	err = c.Disconnect()
 	if err != nil {
-		log.Printf("%s\n", err)
+		logging.Logger.Error("disconnect", zap.Error(err))
 	}
 }

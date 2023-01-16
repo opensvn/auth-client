@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/emmansun/gmsm/sm9"
@@ -18,7 +19,9 @@ type RegisterRequest struct {
 	Username   string `json:"username"`
 	Eid        string `json:"eid"`
 	Random     []byte `json:"random"`
-	DeviceType string `json:"device_type"`
+	Ip         string `json:"ip"`
+	Port       string `json:"port"`
+	DeviceType int    `json:"device_type"`
 }
 
 type Keys struct {
@@ -45,11 +48,16 @@ func ApplyKey(conf *config.Config, user *client.User) ([]byte, error) {
 		return nil, err
 	}
 
+	addr := conf.Mqtt.LocalAddr
+	colonIndex := strings.Index(addr, ":")
+
 	req := RegisterRequest{
-		Id:       conf.User.Uid,
-		Username: conf.Mqtt.ClientName,
-		Eid:      conf.User.Uid,
-		Random:   random1,
+		Id:         conf.User.Uid,
+		Username:   conf.Mqtt.ClientName,
+		Eid:        conf.User.Uid,
+		Random:     random1,
+		Ip:         addr[:colonIndex],
+		Port:       addr[colonIndex+1:],
 		DeviceType: conf.Mqtt.DeviceType,
 	}
 
