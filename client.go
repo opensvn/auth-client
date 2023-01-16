@@ -3,12 +3,13 @@ package client
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"net/url"
 	"time"
 
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
+	"github.com/opensvn/auth-client/log"
+	"go.uber.org/zap"
 )
 
 type ClientConfig struct {
@@ -40,18 +41,18 @@ func (c *Client) Connect() error {
 		KeepAlive:         c.Config.Keepalive,
 		ConnectRetryDelay: time.Duration(c.Config.ConnectRetryDelay) * time.Millisecond,
 		OnConnectionUp: func(cm *autopaho.ConnectionManager, connAck *paho.Connack) {
-			fmt.Println("mqtt connection up")
 			if _, err := cm.Subscribe(context.Background(), &paho.Subscribe{
 				Subscriptions: map[string]paho.SubscribeOptions{
 					c.Config.Topic: {QoS: c.Config.Qos},
 				},
 			}); err != nil {
-				fmt.Printf("failed to subscribe (%s). This is likely to mean no messages will be received.", err)
+				logging.Logger.Error("failed to subscribe", zap.Error(err))
 				return
 			}
-			fmt.Println("mqtt subscription made")
 		},
-		OnConnectError: func(err error) { fmt.Printf("error whilst attempting connection: %s\n", err) },
+		OnConnectError: func(err error) {
+			logging.Logger.Error("connect", zap.Error(err))
+		},
 		ClientConfig: paho.ClientConfig{
 			ClientID: string(c.User.Uid),
 			Router: paho.NewSingleHandlerRouter(func(m *paho.Publish) {
@@ -59,12 +60,14 @@ func (c *Client) Connect() error {
 					c.MsgHandler(m)
 				}
 			}),
-			OnClientError: func(err error) { fmt.Printf("server requested disconnect: %s\n", err) },
+			OnClientError: func(err error) {
+				logging.Logger.Error("disconnect", zap.Error(err))
+			},
 			OnServerDisconnect: func(d *paho.Disconnect) {
 				if d.Properties != nil {
-					fmt.Printf("server requested disconnect: %s\n", d.Properties.ReasonString)
+					logging.Logger.Info("disconnect", zap.String("reason", d.Properties.ReasonString))
 				} else {
-					fmt.Printf("server requested disconnect; reason code: %d\n", d.ReasonCode)
+					logging.Logger.Info("disconnect", zap.Int("code", int(d.ReasonCode)))
 				}
 			},
 			AuthHandler: c.AuthHandler,
@@ -94,11 +97,6 @@ func (c *Client) Connect() error {
 		return connect
 	})
 
-	if c.Config.Debug {
-		cliCfg.Debug = logger{prefix: "autoPaho"}
-		cliCfg.PahoDebug = logger{prefix: "paho"}
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	c.Cancel = cancel
 
@@ -118,17 +116,18 @@ func (c *Client) Subscribe(topic string) error {
 		},
 	}
 	if _, err := c.Cm.Subscribe(context.Background(), subPacket); err != nil {
-		fmt.Printf("failed to subscribe (%s). This is likely to mean no messages will be received.", err)
+		logging.Logger.Error("failed to subscribe", zap.Error(err))
 		return err
 	}
 
-	fmt.Printf("Subscribed to %s", topic)
+	logging.Logger.Info("subscribe to", zap.String("topic", topic))
 	return nil
 }
 
 func (c *Client) Publish(topic, payload string) error {
 	encPayload, err := OfbEncrypt(c.User.SessionKey, []byte(payload))
 	if err != nil {
+		logging.Logger.Error("encrypt", zap.Error(err))
 		return err
 	}
 
@@ -139,7 +138,7 @@ func (c *Client) Publish(topic, payload string) error {
 	}
 
 	if _, err := c.Cm.Publish(context.Background(), pubPacket); err != nil {
-		fmt.Println(err)
+		logging.Logger.Error("publish", zap.Error(err))
 		return err
 	}
 
@@ -152,24 +151,4 @@ func (c *Client) Disconnect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	return c.Cm.Disconnect(ctx)
-}
-
-// logger implements the paho.Logger interface
-type logger struct {
-	prefix string
-}
-
-// Println is the library provided NOOPLogger's
-// implementation of the required interface function()
-func (l logger) Println(v ...interface{}) {
-	fmt.Println(append([]interface{}{l.prefix + ":"}, v...)...)
-}
-
-// Printf is the library provided NOOPLogger's
-// implementation of the required interface function(){}
-func (l logger) Printf(format string, v ...interface{}) {
-	if len(format) > 0 && format[len(format)-1] != '\n' {
-		format = format + "\n" // some log calls in paho do not add \n
-	}
-	fmt.Printf(l.prefix+":"+format, v...)
 }

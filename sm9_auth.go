@@ -7,6 +7,8 @@ import (
 	"github.com/eclipse/paho.golang/packets"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/emmansun/gmsm/sm9"
+	"github.com/opensvn/auth-client/log"
+	"go.uber.org/zap"
 )
 
 type Sm9Auth struct {
@@ -31,17 +33,20 @@ func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
 	s.Server.Uid = []byte(a.Properties.User.Get("uid"))
 	buf, err := hex.DecodeString(a.Properties.User.Get("hid"))
 	if err != nil {
+		logging.Logger.Error("decode string", zap.Error(err))
 		return reauth
 	}
 	s.Server.Hid = buf[0]
 
 	buf, err = hex.DecodeString(string(a.Properties.AuthData))
 	if err != nil {
+		logging.Logger.Error("decode string", zap.Error(err))
 		return reauth
 	}
 
 	decrypted, err := sm9.DecryptASN1(s.client.User.GetEncryptPrivateKey(), s.client.User.Uid, buf)
 	if err != nil {
+		logging.Logger.Error("sm9 decrypt", zap.Error(err))
 		return reauth
 	}
 
@@ -49,12 +54,14 @@ func (s *Sm9Auth) Authenticate(a *paho.Auth) *paho.Auth {
 
 	random1 := decrypted[:len(decrypted)/2]
 	if s.Random1 != hex.EncodeToString(random1) {
+		logging.Logger.Error("random1 not equal", zap.Error(err))
 		return reauth
 	}
 
 	random2 := decrypted[len(decrypted)/2:]
 	buf, err = sm9.EncryptASN1(rand.Reader, s.client.User.GetEncryptMasterPublicKey(), s.Server.Uid, s.Server.Hid, random2)
 	if err != nil {
+		logging.Logger.Error("sm9 encrypt", zap.Error(err))
 		return reauth
 	}
 
