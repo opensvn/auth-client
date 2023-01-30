@@ -168,6 +168,6 @@ func (l logger) Println(v ...interface{}) {
 }
 
 func (l logger) Printf(format string, v ...interface{}) {
-	s := fmt.Sprintf(format, v)
+	s := fmt.Sprintf(format, v...)
 	logging.Logger.Debug("", zap.String("paho", s))
 }
