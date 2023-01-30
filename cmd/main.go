@@ -17,6 +17,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var globalUser *client.User
+
 func main() {
 	buf, err := os.ReadFile("config/config.yml")
 	if err != nil {
@@ -33,9 +35,9 @@ func main() {
 
 	logging.InitLogger(conf.Log.Level, conf.Log.Path)
 
-	user := client.NewUser(&conf.User)
-	if user == nil || user.GetEncryptPrivateKey() == nil || user.GetSignPrivateKey() == nil {
-		random, err := ApplyKey(conf, user)
+	globalUser = client.NewUser(&conf.User)
+	if globalUser == nil || globalUser.GetEncryptPrivateKey() == nil || globalUser.GetSignPrivateKey() == nil {
+		random, err := ApplyKey(conf, globalUser)
 		if err != nil {
 			logging.Logger.Error("apply key error", zap.Error(err))
 			return
@@ -88,13 +90,13 @@ func main() {
 		}()
 		wg.Wait()
 
-		err = user.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
+		err = globalUser.SetEncryptPrivateKey(conf.User.EncryptPrivateKey)
 		if err != nil {
 			logging.Logger.Error("set encrypt private key error", zap.Error(err))
 			return
 		}
 
-		err = user.SetSignPrivateKey(conf.User.SignPrivateKey)
+		err = globalUser.SetSignPrivateKey(conf.User.SignPrivateKey)
 		if err != nil {
 			logging.Logger.Error("set sign private key error", zap.Error(err))
 			return
@@ -130,10 +132,10 @@ func main() {
 			Debug:             conf.Mqtt.Debug,
 		},
 	}
-	c.User = user
+	c.User = globalUser
 	c.ServerUrl = serverUrl
 	c.AuthHandler = client.NewSm9Auth(c)
-	c.SetMsgHandler(HandlePublishMsg)
+	c.SetMsgHandler(HandleMsg)
 
 	// Connect to the broker
 	err = c.Connect()
