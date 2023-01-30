@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"net/url"
 	"time"
 
@@ -97,6 +98,11 @@ func (c *Client) Connect() error {
 		return connect
 	})
 
+	if c.Config.Debug {
+		cliCfg.Debug = logger{}
+		cliCfg.PahoDebug = logger{}
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	c.Cancel = cancel
 
@@ -151,4 +157,17 @@ func (c *Client) Disconnect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	return c.Cm.Disconnect(ctx)
+}
+
+type logger struct {
+}
+
+func (l logger) Println(v ...interface{}) {
+	s := fmt.Sprint(v...)
+	logging.Logger.Debug("", zap.String("paho", s))
+}
+
+func (l logger) Printf(format string, v ...interface{}) {
+	s := fmt.Sprintf(format, v)
+	logging.Logger.Debug("", zap.String("paho", s))
 }
