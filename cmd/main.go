@@ -151,7 +151,7 @@ func main() {
 				return
 			default:
 				time.Sleep(time.Second * 30)
-				_ = c.Publish("test", "test")
+				_ = c.Publish(conf.Mqtt.Topic, "test")
 			}
 		}
 	}()
